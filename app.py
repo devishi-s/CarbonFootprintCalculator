@@ -7,7 +7,6 @@ import os
 app = Flask(__name__)
 
 # ----------------------------
-# MySQL configuration
 # ----------------------------
 # For a local setup, you can set these environment variables:
 #   MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DATABASE

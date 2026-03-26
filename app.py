@@ -175,9 +175,20 @@ def calculate():
 @app.route("/history")
 def history():
     """Show all stored records."""
+    # Minimal addition: read year from query parameter for yearly CO2 total
+    year = request.args.get("year")
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
+
+        # Minimal addition: calculate yearly_total (SUM) with optional year filter
+        if year:
+            cursor.execute("SELECT SUM(total_emission) AS total FROM Records WHERE YEAR(date) = %s", (year,))
+        else:
+            cursor.execute("SELECT SUM(total_emission) AS total FROM Records")
+        yearly_total_row = cursor.fetchone()
+        yearly_total = (yearly_total_row.get("total") if yearly_total_row else 0) or 0
+
         cursor.execute(
             """
             SELECT
@@ -190,8 +201,9 @@ def history():
         records = cursor.fetchall()
     except Error as e:
         records = []
+        yearly_total = 0
         error = f"Database error: {e}"
-        return render_template("history.html", records=records, error=error)
+        return render_template("history.html", records=records, error=error, yearly_total=yearly_total, year=year)
     finally:
         try:
             cursor.close()
@@ -199,7 +211,7 @@ def history():
         except Exception:
             pass
 
-    return render_template("history.html", records=records, error=None)
+    return render_template("history.html", records=records, error=None, yearly_total=yearly_total, year=year)
 
 
 if __name__ == "__main__":
